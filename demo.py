@@ -17,6 +17,16 @@ DEVICE = 'cpu'  # Utilisation du CPU uniquement
 
 # DEVICE = 'cuda'
 DEVICE = 'cpu'
+
+
+
+    # Sauvegarder l'image au lieu d'afficher
+output_path = 'output_viz'
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+
+
+
 def load_image(imfile):
     img = np.array(Image.open(imfile)).astype(np.uint8)
     img = torch.from_numpy(img).permute(2, 0, 1).float()
@@ -31,11 +41,6 @@ def viz(img, flo):
     # map flow to rgb image
     flo = flow_viz.flow_to_image(flo)
     img_flo = np.concatenate([img, flo], axis=0)
-
-    # Sauvegarder l'image au lieu d'afficher
-    output_path = 'output_viz'
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
     idx = len(os.listdir(output_path))
     out_file = os.path.join(output_path, f'viz_{idx:04d}.png')
     # OpenCV attend BGR, donc conversion
@@ -44,7 +49,6 @@ def viz(img, flo):
     
     
 def demo(args):
-
     model = torch.nn.DataParallel(RAFT(args))
     model.load_state_dict(torch.load(args.model, map_location=torch.device(DEVICE)))
 
@@ -54,10 +58,10 @@ def demo(args):
 
     with torch.no_grad():
         images = glob.glob(os.path.join(args.path, '*.png')) + \
-                 glob.glob(os.path.join(args.path, '*.jpg'))
+                glob.glob(os.path.join(args.path, '*.jpg'))
         
         images = sorted(images)
-        for imfile1, imfile2 in zip(images[:-1], images[1:]):
+        for idx, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:])):
             image1 = load_image(imfile1)
             image2 = load_image(imfile2)
 
@@ -66,6 +70,10 @@ def demo(args):
 
             flow_low, flow_up = model(image1, image2, iters=20, test_mode=True)
             viz(image1, flow_up)
+
+            # Sauvegarde du flow
+            npy_file = os.path.join(output_path, f'flow_{idx:04d}.npy')
+            np.save(npy_file, flow_up[0].cpu().numpy())
 
 
 if __name__ == '__main__':
