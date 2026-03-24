@@ -2,8 +2,8 @@ import cv2
 import os
 import glob
 
-input_dir = 'mask_camel_half_res'
-output_dir = 'mask_camel_quarter_res'
+output_dir  = 'test-data'
+input_dir = 'test-data'
 os.makedirs(output_dir, exist_ok=True)
 print(f"le dossier d'input est : {input_dir} et contient {len(glob.glob(os.path.join(input_dir, '*')))} images.")
 print(f"Conversion des images de {input_dir} vers {output_dir}...")

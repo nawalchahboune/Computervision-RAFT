@@ -50,7 +50,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
     REF_INDEX = images_paths.index(ref_path)
 
     # Charger l'image éditée (le logo jaune)
-    edited_ref = np.array(Image.open('mask_camel_quarter_res/ref_camel_00004.png')).astype(np.float32)
+    edited_ref = np.array(Image.open('test-data-mask/ref.png')).astype(np.float32)
     if edited_ref.shape[2] == 4:
         edited_ref = edited_ref[:, :, :3]
 
@@ -138,4 +138,4 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
             print(f"Frame {t} traitée (Erreur moyenne flow: {np.mean(err_dist):.2f})")
 
 if __name__ == '__main__':
-    main('models/raft-things.pth', 'camel-frames_quarter_res', 'mask_camel_quarter_res/00004.png', 'propagation-prof-data-raft-edited-camel_128_iter-from-4-frame')
+    main('models/raft-things.pth', 'test-data', 'test-data-mask/00000.png', 'propagation-paragliding')

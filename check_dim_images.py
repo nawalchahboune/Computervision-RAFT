@@ -1,7 +1,7 @@
 import os
 import cv2
 
-folder = "camel-frames"  # adapte le chemin si besoin
+folder = "test-data"  # adapte le chemin si besoin
 
 sizes = set()
 for fname in sorted(os.listdir(folder)):

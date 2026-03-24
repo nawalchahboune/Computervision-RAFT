@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import glob
 import os
 
-# Tolérance autour de [0, 128, 0]
-lower_green = np.array([0, 120, 0])
-upper_green = np.array([10, 135, 10])
+# Tolérance autour de [0, 0, 255] (RED en BGR)
+lower_red = np.array([0, 0, 100])
+upper_red = np.array([50, 50, 255])
 
 mask_dir = 'test-data-mask'  # adapte le chemin si besoin
-output_dir = os.path.join(mask_dir, 'green_masks')
+output_dir = os.path.join(mask_dir, 'red_masks')
 os.makedirs(output_dir, exist_ok=True)
 
 mask_files = sorted(glob.glob(os.path.join(mask_dir, '*.png')))
@@ -21,17 +21,17 @@ for mask_path in mask_files:
         print(f"Erreur: masque non trouvé pour {mask_path}!")
         continue
 
-    mask_green = cv2.inRange(mask, lower_green, upper_green)
+    mask_red = cv2.inRange(mask, lower_red, upper_red)
 
     # Affichage pour la première image seulement
     if mask_path == mask_files[0]:
-        plt.figure("Masque raquette (vert)")
-        plt.imshow(mask_green, cmap='gray')
-        plt.title(f"Masque binaire (raquette verte)\n{os.path.basename(mask_path)}")
+        plt.figure("Masque objet (rouge)")
+        plt.imshow(mask_red, cmap='gray')
+        plt.title(f"Masque binaire (objet rouge)\n{os.path.basename(mask_path)}")
         plt.axis('off')
         plt.show()
 
-    out_name = os.path.splitext(os.path.basename(mask_path))[0] + 'stroller.png'
+    out_name = os.path.splitext(os.path.basename(mask_path))[0] + '_red.png'
     out_path = os.path.join(output_dir, out_name)
-    cv2.imwrite(out_path, mask_green)
-    print(f"Masque raquette extrait et sauvegardé sous {out_path}")
+    cv2.imwrite(out_path, mask_red)
+    print(f"Masque rouge extrait et sauvegardé sous {out_path}")
