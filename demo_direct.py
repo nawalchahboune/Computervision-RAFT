@@ -138,4 +138,4 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
             print(f"Frame {t} traitée (Erreur moyenne flow: {np.mean(err_dist):.2f})")
 
 if __name__ == '__main__':
-    main('models/raft-things.pth', 'test-data', 'test-data-mask/00000.png', 'propagation-paragliding')
+    main('models/raft-things.pth', 'test-data', 'test-data-mask/00000.png', 'output/propagation-paragliding')
