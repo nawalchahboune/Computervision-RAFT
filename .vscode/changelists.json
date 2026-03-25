@@ -4,8 +4,7 @@
       "name": "Default",
       "files": [
         "README.md",
-        ".vscode/changelists.json",
-        "to-half-res.py"
+        ".vscode/changelists.json"
       ]
     }
   ],

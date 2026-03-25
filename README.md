@@ -1,6 +1,6 @@
-# Computer Vision Project - RAFT for dense optical flow estimation
+# Computer Vision Project - RAFT for Dense Optical Flow Estimation
 
-This repository uses on the official RAFT implementation from:
+This repository is built on top of the official RAFT implementation:
 
 [RAFT: Recurrent All Pairs Field Transforms for Optical Flow](https://arxiv.org/pdf/2003.12039.pdf)<br/>
 ECCV 2020<br/>
@@ -8,12 +8,12 @@ Zachary Teed and Jia Deng<br/>
 
 <img src="RAFT.png">
 
-## The pipline:
+## Project Layout
 
-Beyond the original RAFT code, this repository contains our project work focused on
-video editing by optical-flow-based propagation.
+Beyond the original RAFT code, this repository contains our project work on
+video edit propagation using dense optical flow.
 
-Our main contributions are:
+The project includes:
 
 1. Multiple propagation strategies implemented as separate experiments:
 	- direct reference warping with consistency filtering (`demo_direct.py`),
@@ -24,17 +24,14 @@ Our main contributions are:
 2. Mask and data preparation tools:
 	- mask color inspection (`inspect_mask_color.py`),
 	- red/green mask extraction (`extract_red_mask.py`, `extract_green_mask.py`),
-	- image resizing helper (`to-half-res.py`).
-3. Debugging and validation utilities:
-	- image dimension checks (`check_dim_images.py`),
-	- flow/mask shape consistency checks (`check_flow_mask_shape.py`),
+	- image resizing helper (`to-half-res.py`, configured for quarter-resolution output).
+3. Exporting to video:
 	- frame sequence to video conversion (`frames_to_video.py`).
-4. Reproducible test assets in `test-data` and `test-data-mask` to run and compare methods.
 
 ## Project Context
 
 This work was developed as part of the UE Computer Vision course at IMT Atlantique,
-with an emphasis on long-term dense motion estimation and edit propagation.
+with an emphasis on long-term dense motion estimation and edit propagation quality.
 
 ## Setup
 
@@ -48,14 +45,6 @@ conda activate raft
 conda install pytorch=1.6.0 torchvision=0.7.0 cudatoolkit=10.1 matplotlib tensorboard scipy opencv -c pytorch
 ```
 
-### Additional Project Dependencies
-
-For the educational pipeline in `1-prof-project`:
-
-```bash
-pip install -r 1-prof-project/requirements.txt
-```
-
 ## Model Weights
 
 Pretrained models can be downloaded with:
@@ -67,9 +56,27 @@ Pretrained models can be downloaded with:
 Or manually from Google Drive:
 [RAFT pretrained models](https://drive.google.com/drive/folders/1sWDsfuZ3Up38EUQt7-JDTT1HcGHuJgvT?usp=sharing)
 
+## Frames, Masks, and Result Videos
+
+You can download frames, masks, and generated result videos from:
+[Project data and results (Google Drive)](https://drive.google.com/drive/folders/1SfdsRHnGVoKTo1I6F-J6ZyhfaFTy7bkZ)
+
+Two data workflows are supported:
+- Full-resolution workflow:
+	1) place full-resolution frames in `test-data/`
+	2) place mask and edited reference frame in `test-data-mask/`
+	3) run `python to-half-res.py` to generate quarter-resolution frames/mask
+	4) run a demo script
+- Quarter-resolution workflow:
+	1) place quarter-resolution frames directly in `test-data/`
+	2) place mask and fer in `test-data-mask/`
+	3) run a demo script directly
+
+The same Drive folder also contains result videos so you can compare output quality across methods.
+
 ## Quick Start
 
-### 1. Run one of our propagation experiments
+### Run one of our propagation experiments
 
 ```bash
 python demo_direct.py
@@ -78,23 +85,3 @@ python demo-pairwise-median.py
 python demo-sequential-from-ref.py
 python demo-sequential-to-ref.py
 ```
-
-### 2. Run the educational reference-based pipeline
-
-```bash
-cd 1-prof-project/src
-python main.py
-```
-
-## Repository Layout (Main Additions)
-
-- `1-prof-project/src/editing`: warping functions for image/mask propagation.
-- `1-prof-project/src/motion`: optical flow wrappers and visualization.
-- `1-prof-project/src/utils`: frame I/O and video utilities.
-- `demo_*.py` and `demo-*.py`: alternative propagation experiment scripts.
-- `test-data`, `test-data-mask`: sample frames and masks.
-
-## Notes
-
-- Some scripts use hardcoded paths for fast experimentation. Update paths as needed.
-- Most experiment scripts are currently configured for CPU (`DEVICE = 'cpu'`), but can be adapted to CUDA.
