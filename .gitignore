@@ -1,34 +1,7 @@
 *.pyc
 *.egg-info
 models
-# Ignore all output, mask, and propagate folders
-output*/
-output_prof*/
-output_viz*/
-output_viz__forward/
-output_viz_camel_T0-Tn_high_res/
-output_viz_camel_Tn-T0_high_res/
-propagated_masks_*/
-propagation-prof-data-raft-edited*/
-mask_*/
-mask/
-mask_camel*/
-mask_soccer*/
-mask_tennis*/
-propagates_*/
-propagated_*/
-# Ignore all demo*.py except demo_direct.py
-demo*.py
-!demo_direct.py
-!demo-pairwise.py
-!demo-pairwise-median.py
-!demo-sequential-from-ref.py
-!demo-sequential-to-ref.py
-output_viz/
-soccer*/
-tennis*/
-camel*/
-ancien-output*/
+# Ignore all output, data
 output*/
 test-data*/
 test-data-mask*/
