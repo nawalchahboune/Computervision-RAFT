@@ -14,7 +14,7 @@ for img_path in glob.glob(os.path.join(input_dir, '*')):
     if img is None:
         continue
     h, w = img.shape[:2]
-    img_half = cv2.resize(img, (w // 2, h // 2), interpolation=cv2.INTER_AREA)
+    img_half = cv2.resize(img, (w // 4, h // 4), interpolation=cv2.INTER_AREA)
     out_path = os.path.join(output_dir, os.path.basename(img_path))
     saved = cv2.imwrite(out_path, img_half)
     print(f"Écriture: {saved} -> {out_path}")
