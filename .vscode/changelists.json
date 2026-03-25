@@ -3,9 +3,9 @@
     {
       "name": "Default",
       "files": [
-        ".vscode/changelists.json",
         ".gitignore",
-        "demo-pairwise-median.py"
+        ".vscode/changelists.json",
+        "demo-sequential-from-ref.py"
       ]
     }
   ],
