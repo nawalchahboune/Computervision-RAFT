@@ -3,9 +3,9 @@
     {
       "name": "Default",
       "files": [
-        ".gitignore",
         ".vscode/changelists.json",
-        "demo-sequential-from-ref.py"
+        ".gitignore",
+        "demo-sequential-to-ref.py"
       ]
     }
   ],
