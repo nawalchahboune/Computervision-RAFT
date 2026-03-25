@@ -20,6 +20,7 @@ propagated_*/
 # Ignore all demo*.py except demo_direct.py
 demo*.py
 !demo_direct.py
+!demo-pairwise.py
 output_viz/
 soccer*/
 tennis*/
