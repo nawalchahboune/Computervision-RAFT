@@ -12,14 +12,6 @@ from PIL import Image
 DEVICE = 'cpu'
 ITERS  = 128
 
-# ──────────────────────────────────────────────────────────────
-# MÉTHODE 1a — PAIRWISE  (Approach 1 : single-point lookup)
-# Flow calculé entre In-1 → In à chaque step.
-# Le centre du masque est mis à jour par lecture du vecteur de flow
-# au pixel le plus proche du centre courant.
-# ✓ Rapide  ✗ Drift accumule sur longues séquences
-# ──────────────────────────────────────────────────────────────
-
 def warp_point(cx, cy, flow):
     """Déplace (cx,cy) par lecture du vecteur flow au pixel le plus proche."""
     h, w = flow.shape[:2]
@@ -32,7 +24,7 @@ def warp_point(cx, cy, flow):
 def main(model_path, frames_path, mask_ref_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 1. Initialisation RAFT
+    # Initialisation RAFT
     args = {'model': model_path, 'small': False, 'mixed_precision': False,
             'alternate_corr': False, 'dropout': 0.0}
     class Map(dict):
@@ -43,7 +35,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
     model.load_state_dict(torch.load(args_obj.model, map_location=DEVICE))
     model = model.module.to(DEVICE).eval()
 
-    # 2. Chargement des frames
+    # Chargement des frames
     images_paths = sorted(glob.glob(os.path.join(frames_path, "*.png")))
     if not images_paths:
         images_paths = sorted(glob.glob(os.path.join(frames_path, "*.jpg")))

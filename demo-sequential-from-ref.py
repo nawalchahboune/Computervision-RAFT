@@ -12,18 +12,11 @@ from PIL import Image
 DEVICE = 'cpu'
 ITERS  = 128
 
-# ──────────────────────────────────────────────────────────────
-# MÉTHODE 3 — SEQUENTIAL FROM REFERENCE
-# Compose le flow cumulatif I0→In via cv2.remap :
-#   Φ_n = Φ_{n-1} + f_{n,n-1}( x0 + Φ_{n-1}(x0) )
-# Convient aux longues séquences, drift modéré.
-# ✓ Stable longues séquences  ~ Drift modéré
-# ──────────────────────────────────────────────────────────────
 
 def main(model_path, frames_path, mask_ref_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 1. Initialisation RAFT
+    # Initialisation RAFT
     args = {'model': model_path, 'small': False, 'mixed_precision': False,
             'alternate_corr': False, 'dropout': 0.0}
     class Map(dict):
@@ -34,7 +27,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
     model.load_state_dict(torch.load(args_obj.model, map_location=DEVICE))
     model = model.module.to(DEVICE).eval()
 
-    # 2. Chargement des frames
+    # Chargement des frames
     images_paths = sorted(glob.glob(os.path.join(frames_path, "*.png")))
     if not images_paths:
         images_paths = sorted(glob.glob(os.path.join(frames_path, "*.jpg")))
@@ -82,19 +75,16 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
                 _, flow_up = model(prev_pad, curr_pad, iters=ITERS, test_mode=True)
                 f_pairwise = padder.unpad(flow_up)[0].permute(1,2,0).cpu().numpy()
 
-                # map : p → p + Φ(p)
+                # map
                 map_x = (identity_x + Phi[:,:,0]).astype(np.float32)
                 map_y = (identity_y + Phi[:,:,1]).astype(np.float32)
 
-                # Warp f_{n,n-1} à travers Φ courant
                 f_warped_x = cv2.remap(f_pairwise[:,:,0], map_x, map_y, cv2.INTER_LINEAR)
                 f_warped_y = cv2.remap(f_pairwise[:,:,1], map_x, map_y, cv2.INTER_LINEAR)
 
-                # Accumulation : Φ_n = Φ_{n-1} + f_{n,n-1}(x0 + Φ_{n-1})
                 Phi[:,:,0] += f_warped_x
                 Phi[:,:,1] += f_warped_y
 
-                # Warp du masque et de l'édition depuis I0 via Φ cumulatif
                 map_x_cum = (identity_x + Phi[:,:,0]).astype(np.float32)
                 map_y_cum = (identity_y + Phi[:,:,1]).astype(np.float32)
 
