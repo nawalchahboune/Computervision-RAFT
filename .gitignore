@@ -21,6 +21,7 @@ propagated_*/
 demo*.py
 !demo_direct.py
 !demo-pairwise.py
+!demo-pairwise-median.py
 output_viz/
 soccer*/
 tennis*/
