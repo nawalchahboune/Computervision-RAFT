@@ -12,14 +12,6 @@ from PIL import Image
 DEVICE = 'cpu'
 ITERS  = 128
 
-# ──────────────────────────────────────────────────────────────
-# MÉTHODE 1b — PAIRWISE  (Approach 2 : region median)
-# Flow calculé entre In-1 → In à chaque step.
-# Le centre est mis à jour par la médiane des vecteurs flow
-# échantillonnés sur une grille 3×3 autour du centre courant.
-# ✓ Robuste au bruit  ✗ Drift accumule sur longues séquences
-# ──────────────────────────────────────────────────────────────
-
 def warp_sticker_region(cx, cy, flow, sw, sh, n_points=9):
     """Déplace (cx,cy) par médiane du flow sur grille √n×√n autour du centre."""
     h, w   = flow.shape[:2]
@@ -39,7 +31,7 @@ def warp_sticker_region(cx, cy, flow, sw, sh, n_points=9):
 def main(model_path, frames_path, mask_ref_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 1. Initialisation RAFT
+    # Initialisation RAFT
     args = {'model': model_path, 'small': False, 'mixed_precision': False,
             'alternate_corr': False, 'dropout': 0.0}
     class Map(dict):
@@ -50,7 +42,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
     model.load_state_dict(torch.load(args_obj.model, map_location=DEVICE))
     model = model.module.to(DEVICE).eval()
 
-    # 2. Chargement des frames
+    # Chargement des frames
     images_paths = sorted(glob.glob(os.path.join(frames_path, "*.png")))
     if not images_paths:
         images_paths = sorted(glob.glob(os.path.join(frames_path, "*.jpg")))

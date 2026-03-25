@@ -10,10 +10,7 @@ from utils.utils import InputPadder
 from PIL import Image
 
 DEVICE = 'cpu'  # Change en 'cuda' si tu as une carte NVIDIA
-# avec cette valeur appliqué à soccer j'ai eu les resulatta dans le folder  propagation-prof-data-raft-edited-soccer_96_iter
 # ITERS = 96 
-
-# j'augmente à 128 pour voir si ça améliore la qualité du flow et donc de la propagation (mais ça prend plus de temps)
 ITERS = 128
 
 def main(model_path, frames_path, mask_ref_path, output_dir):
@@ -31,7 +28,6 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
     model = model.module.to(DEVICE).eval()
 
     # 2. Chargement des ressources
-    # Prendre en compte .png et .jpg
     images_paths = sorted(glob.glob(os.path.join(frames_path, "*.png")))
     if len(images_paths) == 0:
         images_paths = sorted(glob.glob(os.path.join(frames_path, "*.jpg")))
@@ -49,7 +45,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
         raise ValueError(f"Aucune image correspondant à {ref_name} dans {frames_path}")
     REF_INDEX = images_paths.index(ref_path)
 
-    # Charger l'image éditée (le logo jaune)
+    # Charger l'image éditée
     edited_ref = np.array(Image.open('test-data-mask/ref.png')).astype(np.float32)
     if edited_ref.shape[2] == 4:
         edited_ref = edited_ref[:, :, :3]
@@ -71,16 +67,12 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
 
     with torch.no_grad():
         for t, im_path in enumerate(images_paths):
-            # if t == REF_INDEX:
-            #     cv2.imwrite(os.path.join(output_dir, f"mask_{t:04d}.png"), mask_ref)
-            #     cv2.imwrite(os.path.join(output_dir, f"edited_{t:04d}.png"), edited_ref.astype(np.uint8))
-            #     continue
 
             # Charger frame actuelle
             img_t = torch.from_numpy(np.array(Image.open(im_path))).permute(2,0,1).float()[None].to(DEVICE)
             img_t_pad = padder.pad(img_t)[0]
 
-            # --- ETAPE A : Calcul du Flow (Forward & Backward) ---
+            # Calcul du Flow (Forward & Backward)
             # Flow: Frame_T -> Frame_Ref
             _, flow_fwd_up = model(img_t_pad, img_ref_pad, iters=ITERS, test_mode=True)
             flow_fwd = padder.unpad(flow_fwd_up)[0].permute(1, 2, 0).cpu().numpy()
@@ -89,12 +81,11 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
             _, flow_bwd_up = model(img_ref_pad, img_t_pad, iters=ITERS, test_mode=True)
             flow_bwd = padder.unpad(flow_bwd_up)[0].permute(1, 2, 0).cpu().numpy()
 
-            # --- ETAPE B : Lissage du Flow ---
+            # Lissage du Flow 
             flow_fwd[:,:,0] = cv2.GaussianBlur(flow_fwd[:,:,0], (15, 15), 0)
             flow_fwd[:,:,1] = cv2.GaussianBlur(flow_fwd[:,:,1], (15, 15), 0)
 
-            # --- ETAPE C : Forward-Backward Consistency Check ---
-            # On vérifie si le pixel qui va en Ref revient bien en T
+            # Forward-Backward Consistency Check
             map_x_fwd = (identity_x + flow_fwd[:,:,0]).astype(np.float32)
             map_y_fwd = (identity_y + flow_fwd[:,:,1]).astype(np.float32)
             
@@ -110,14 +101,14 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
             # Créer un masque de confiance (Pixels qui bougent de façon logique)
             confidence_mask = (err_dist < 3.0).astype(np.float32) # Seuil de 2 pixels d'erreur max
 
-            # --- ETAPE D : Warping et Nettoyage ---
+            # Warping et Nettoyage
             warped_mask = cv2.remap(mask_ref_float, map_x_fwd, map_y_fwd, cv2.INTER_LINEAR)
             
             # Appliquer la confiance et le seuil
             combined_mask = warped_mask * confidence_mask
             _, binary_mask = cv2.threshold((combined_mask * 255).astype(np.uint8), 180, 255, cv2.THRESH_BINARY)
 
-            # Ne garder que la plus grande composante (La Voile)
+            # Ne garder que la plus grande composante
             num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(binary_mask, connectivity=8)
             if num_labels > 1:
                 largest_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
@@ -125,7 +116,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
                 final_mask[labels == largest_label] = 255
                 binary_mask = final_mask
 
-            # --- ETAPE E : Composition Finale ---
+            # Composition Finale 
             edited_ref_warped = cv2.remap(edited_ref, map_x_fwd, map_y_fwd, cv2.INTER_LINEAR)
             frame_orig = np.array(Image.open(im_path)).astype(np.float32)
             

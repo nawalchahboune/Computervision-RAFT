@@ -13,18 +13,10 @@ from scipy.interpolate import RegularGridInterpolator
 DEVICE = 'cpu'
 ITERS  = 128
 
-# ──────────────────────────────────────────────────────────────
-# MÉTHODE 4 — SEQUENTIAL TO REFERENCE  (backward)
-# Compose le flow backward cumulatif In→I0 avec interpolation.
-# Formule : d_{n,0}(xn) = u_{n,n-1}(xn) + d_{n-1,0}(xn + u_{n,n-1}(xn))
-# Mise à jour du centre : c_n = c_{n-1} - u_{n,n-1}(c_{n-1})
-# ✓ Précis  ✗ Plus lent (interpolation pixel-wise)
-# ──────────────────────────────────────────────────────────────
-
 def main(model_path, frames_path, mask_ref_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 1. Initialisation RAFT
+    # Initialisation RAFT
     args = {'model': model_path, 'small': False, 'mixed_precision': False,
             'alternate_corr': False, 'dropout': 0.0}
     class Map(dict):
@@ -35,7 +27,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
     model.load_state_dict(torch.load(args_obj.model, map_location=DEVICE))
     model = model.module.to(DEVICE).eval()
 
-    # 2. Chargement des frames
+    # Chargement des frames
     images_paths = sorted(glob.glob(os.path.join(frames_path, "*.png")))
     if not images_paths:
         images_paths = sorted(glob.glob(os.path.join(frames_path, "*.jpg")))
@@ -86,7 +78,7 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
                 binary_mask   = mask_ref.copy()
                 edited_warped = edited_ref.copy()
             else:
-                # Backward flow : In → In-1
+                # Backward flow
                 _, flow_bwd_up = model(curr_pad, prev_pad, iters=ITERS, test_mode=True)
                 u_backward = padder.unpad(flow_bwd_up)[0].permute(1,2,0).cpu().numpy()
 
@@ -98,13 +90,12 @@ def main(model_path, frames_path, mask_ref_path, output_dir):
                     (ys_grid, xs_grid), u_backward[:,:,1],
                     method='linear', bounds_error=False, fill_value=0.0)
 
-                # Mise à jour du centre : c_n = c_{n-1} - u_{n,n-1}(c_{n-1})
+                # Mise à jour du centre
                 pt  = np.array([[cy, cx]])
                 cx -= interp_x(pt)[0]
                 cy -= interp_y(pt)[0]
 
                 # Composition backward du flow cumulatif :
-                # D_n(xn) = u_{n,n-1}(xn) + D_{n-1}(xn + u_{n,n-1}(xn))
                 map_x_bwd = (identity_x + u_backward[:,:,0]).astype(np.float32)
                 map_y_bwd = (identity_y + u_backward[:,:,1]).astype(np.float32)
 
