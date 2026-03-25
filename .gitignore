@@ -22,6 +22,7 @@ demo*.py
 !demo_direct.py
 !demo-pairwise.py
 !demo-pairwise-median.py
+!demo-sequential-from-ref.py
 output_viz/
 soccer*/
 tennis*/
